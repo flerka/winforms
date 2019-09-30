@@ -1185,8 +1185,12 @@ namespace System.Windows.Forms.PropertyGridInternal
                     return _owningPropertyDescriptorGridEntry.Children.GetEntry(0).AccessibilityObject;
                 }
 
-                var propertyGridViewAccessibleObject = (PropertyGridView.PropertyGridViewAccessibleObject)Parent;
-                var propertyGridView = propertyGridViewAccessibleObject.Owner as PropertyGridView;
+                var propertyGridView = GetPropertyGridView();
+                if (propertyGridView == null)
+                {
+                    return null;
+                }
+
                 if (_owningPropertyDescriptorGridEntry == propertyGridView.SelectedGridEntry)
                 {
                     if (propertyGridView.SelectedGridEntry.Enumerable)
@@ -1208,8 +1212,12 @@ namespace System.Windows.Forms.PropertyGridInternal
                         .GetEntry(_owningPropertyDescriptorGridEntry.ChildCount - 1).AccessibilityObject;
                 }
 
-                var propertyGridViewAccessibleObject = (PropertyGridView.PropertyGridViewAccessibleObject)Parent;
-                var propertyGridView = propertyGridViewAccessibleObject.Owner as PropertyGridView;
+                var propertyGridView = GetPropertyGridView();
+                if (propertyGridView == null)
+                {
+                    return null;
+                }
+
                 if (_owningPropertyDescriptorGridEntry == propertyGridView.SelectedGridEntry)
                 {
                     if (propertyGridView.SelectedGridEntry.Enumerable && propertyGridView.DropDownButton.Visible)
@@ -1223,14 +1231,76 @@ namespace System.Windows.Forms.PropertyGridInternal
                 return null;
             }
 
+            private PropertyGridView GetPropertyGridView()
+            {
+                var propertyGridViewAccessibleObject = Parent as PropertyGridView.PropertyGridViewAccessibleObject;
+                if (propertyGridViewAccessibleObject == null)
+                {
+                    return null;
+                }
+
+                return propertyGridViewAccessibleObject.Owner as PropertyGridView;
+            }
+
             internal override bool IsPatternSupported(int patternId)
             {
-                if (patternId == NativeMethods.UIA_ValuePatternId)
+                if (patternId == NativeMethods.UIA_ValuePatternId ||
+                    (patternId == NativeMethods.UIA_ExpandCollapsePatternId && owner.Enumerable))
                 {
                     return true;
                 }
 
                 return base.IsPatternSupported(patternId);
+            }
+
+            internal override void Expand()
+            {
+                if (ExpandCollapseState == UnsafeNativeMethods.ExpandCollapseState.Collapsed)
+                {
+                    ExpandOrCollapse();
+                }
+            }
+
+            internal override void Collapse()
+            {
+                if (ExpandCollapseState == UnsafeNativeMethods.ExpandCollapseState.Expanded)
+                {
+                    ExpandOrCollapse();
+                }
+            }
+
+            private void ExpandOrCollapse()
+            {
+                var propertyGridView = GetPropertyGridView();
+                if (propertyGridView == null)
+                {
+                    return;
+                }
+
+                int row = propertyGridView.GetRowFromGridEntry(_owningPropertyDescriptorGridEntry);
+                if (row != -1)
+                {
+                    propertyGridView.PopupDialog(row);
+                }
+            }
+
+            internal override UnsafeNativeMethods.ExpandCollapseState ExpandCollapseState
+            {
+                get
+                {
+                    var propertyGridView = GetPropertyGridView();
+                    if (propertyGridView == null)
+                    {
+                        return UnsafeNativeMethods.ExpandCollapseState.Collapsed;
+                    }
+
+                    if (_owningPropertyDescriptorGridEntry == propertyGridView.SelectedGridEntry && propertyGridView.DropDownVisible)
+                    {
+                        return UnsafeNativeMethods.ExpandCollapseState.Expanded;
+                    }
+
+                    return UnsafeNativeMethods.ExpandCollapseState.Collapsed;
+                }
             }
 
             internal override object GetPropertyValue(int propertyID)
