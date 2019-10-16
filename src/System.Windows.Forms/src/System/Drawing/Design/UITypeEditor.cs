@@ -16,17 +16,23 @@ namespace System.Drawing.Design
     {
         static UITypeEditor()
         {
+            // Our set of intrinsic editors.
             Hashtable intrinsicEditors = new Hashtable
             {
-                // Our set of intrinsic editors.
+                // System.ComponentModel type Editors
                 [typeof(DateTime)] = "System.ComponentModel.Design.DateTimeEditor, " + AssemblyRef.SystemDesign,
                 [typeof(Array)] = "System.ComponentModel.Design.ArrayEditor, " + AssemblyRef.SystemDesign,
                 [typeof(IList)] = "System.ComponentModel.Design.CollectionEditor, " + AssemblyRef.SystemDesign,
                 [typeof(ICollection)] = "System.ComponentModel.Design.CollectionEditor, " + AssemblyRef.SystemDesign,
                 [typeof(byte[])] = "System.ComponentModel.Design.BinaryEditor, " + AssemblyRef.SystemDesign,
                 [typeof(Stream)] = "System.ComponentModel.Design.BinaryEditor, " + AssemblyRef.SystemDesign,
+
+                // System.Windows.Forms type Editors
                 [typeof(string[])] = "System.Windows.Forms.Design.StringArrayEditor, " + AssemblyRef.SystemDesign,
-                [typeof(Collection<string>)] = "System.Windows.Forms.Design.StringCollectionEditor, " + AssemblyRef.SystemDesign
+                [typeof(Collection<string>)] = "System.Windows.Forms.Design.StringCollectionEditor, " + AssemblyRef.SystemDesign,
+            
+                // System.Drawing.Design type Editors
+                [typeof(Icon)] = "System.Drawing.Design.IconEditor, " + AssemblyRef.SystemDrawingDesign,
             };
 
             // Add our intrinsic editors to TypeDescriptor.
